@@ -1,0 +1,248 @@
+@custom-sider-menu-font-color: @primary-color;
+@header-color: #fff;
+@sider-menu-selectd-color: #fff;
+
+html,
+body {
+  height: 100%;
+  min-width: 1280px;
+  font-family: '微软雅黑', sans-serif;
+}
+
+.ant-form {
+  &>.ant-col {
+    margin: 0 !important
+  }
+
+  .ant-form-item-label {
+    // width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &>.ant-col:last-child {
+    // display: none;
+  }
+}
+
+.ant-table-thead>tr>th .anticon-filter,
+.ant-table-thead>tr>th .ant-table-filter-icon {
+  right: auto;
+}
+
+.ant-table-thead>tr>th,
+.ant-table-tbody>tr>td {
+  position: relative;
+  font-size: 12px;
+
+  .ant-table-column-title {
+    user-select: none;
+  }
+
+  .custom-table-resize {
+    // border-right: 1px solid #ccc;
+    width: 3px;
+    background: #ccc;
+    position: absolute;
+    left: calc(100% - 3px);
+    top: 0;
+    height: 100%;
+    cursor: col-resize;
+  }
+}
+
+.ant-layout-content {
+  /*width: calc(100% - 200px)*/
+  width: 100%;
+}
+
+.ant-router-tabs .ant-tabs.ant-tabs-card {
+  max-height: 28px;
+  flex: 1
+}
+
+.ant-router-tabs__main--scroll {
+  // max-height: calc(100% - 125px);
+  padding: 8px 16px 0 !important;
+  max-height: calc(100vh - 95px);
+}
+
+.ant-sider-menu .ant-menu {
+  color: @custom-sider-menu-font-color;
+}
+
+.ant-pagination-item-active,
+.ant-pagination-item-active:hover,
+.ant-pagination-item-active:focus {
+  background-color: @primary-color;
+}
+
+.ant-sider-menu .ant-menu .ant-menu-item:hover,
+.ant-sider-menu .ant-menu .ant-menu-item-active,
+.ant-sider-menu .ant-menu .ant-menu-submenu-title:hover {
+  color: @sider-menu-selectd-color
+}
+
+.ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected {
+  color: @sider-menu-selectd-color;
+}
+
+.ant-menu-submenu-vertical>.ant-menu-submenu-title .ant-menu-submenu-arrow::before,
+.ant-menu-submenu-vertical-left>.ant-menu-submenu-title .ant-menu-submenu-arrow::before,
+.ant-menu-submenu-vertical-right>.ant-menu-submenu-title .ant-menu-submenu-arrow::before,
+.ant-menu-submenu-inline>.ant-menu-submenu-title .ant-menu-submenu-arrow::before,
+.ant-menu-submenu-vertical>.ant-menu-submenu-title .ant-menu-submenu-arrow::after,
+.ant-menu-submenu-vertical-left>.ant-menu-submenu-title .ant-menu-submenu-arrow::after,
+.ant-menu-submenu-vertical-right>.ant-menu-submenu-title .ant-menu-submenu-arrow::after,
+.ant-menu-submenu-inline>.ant-menu-submenu-title .ant-menu-submenu-arrow::after {
+  background: @custom-sider-menu-font-color;
+}
+
+.ant-layout-header {
+  background: @primary-color;
+}
+
+.header .system-logo span {
+  color: @header-color !important
+}
+
+.header .right .button {
+  color: @header-color !important
+}
+
+.ant-divider-vertical.title {
+  width: 3px;
+  height: 16px;
+  margin-bottom: 2.5px;
+  background: @primary-color;
+  margin-left: 0;
+}
+
+// 不知道为啥这里要改下圆角
+// .ant-btn, .ant-select-selection{
+//   border-radius: 2px;
+// }
+
+.addNode {
+  float: right;
+  border: none;
+  font-size: 12px;
+  line-height: 30px;
+  height: 30px;
+}
+
+.ant-modal-title {
+  color: rgba(4, 12, 44, 1);
+  font-size: 16px;
+}
+
+.ant-modal-header {
+  padding: 13px 20px;
+}
+
+.ant-modal-close-x {
+  width: 49px;
+  height: 49px;
+  line-height: 49px;
+}
+
+// 表格表头的问号图标样式对齐修正
+.table-question-icon {
+  vertical-align: middle !important;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+// p标签背默认这是1em，使用该class可以修改为0.5em
+.p-bottom-05em {
+  margin-bottom: 0.5em !important;
+}
+
+// 连接颜色
+.common-link {
+  color: #00f;
+
+  &:hover {
+    // hover时不知道哪里来的#228fd4，这里去除
+    color: #00f;
+  }
+
+  // 设置disable 鼠标样式
+  &[disabled] {
+    cursor: not-allowed;
+  }
+}
+
+.space-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.space-around {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+// 页面内容高度，适用于以及菜单页面的容器固定高度
+.page-content-height {
+  height: calc(100% - 90px);
+  overflow: auto;
+}
+
+// 页面内容高度，适用于以及菜单页面的容器最小高度
+.page-content-min-height {
+  min-height: calc(100% - 90px)
+}
+
+.line-edit-icon {
+  color: #409EFF !important;
+  cursor: pointer;
+  vertical-align: 0 !important;
+  margin: 0 5px;
+}
+
+// a-dropdown默认item是灰色，产品要求改为蓝色，系统已大量使用，不方便修改结构，这里使用样式覆盖
+/*  下拉菜单样式start */
+.ant-dropdown-menu-item,
+.ant-dropdown-menu-submenu-title {
+  // color: rgba(0, 0, 0, 0.65)
+  color: #00f;
+}
+
+.ant-dropdown-menu-item-disabled,
+.ant-dropdown-menu-submenu-title-disabled {
+  color: rgba(0, 0, 0, 0.25)
+}
+
+/*  下拉菜单样式end */
+
+/* tooltip快捷键样式 */
+.shortcut-key {
+  margin-left: 2px;
+  margin-right: 2px;
+  line-height: 1;
+  padding: 1px 8px;
+  background: #1890ff;
+  border-radius: 5px;
+
+  &:first-child {
+    margin-left: 20px;
+  }
+}
+
+.select-annotation-tip {
+  margin: 0 8px 0 5px;
+}
+
+.tooltip>.tooltip-inner {
+  max-width: 400px;
+}
+
+// 文本超出省略(外部指定宽度)
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

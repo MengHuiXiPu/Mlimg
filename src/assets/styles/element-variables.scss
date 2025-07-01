@@ -1,0 +1,11 @@
+/* 用于修改element-ui主题 */
+/* 后面提出统一样式时在这里改动即可 */
+
+
+/* 改变主题色变量 */
+// $--color-primary: #2e4fde;
+
+/* 改变 icon 字体路径变量，必需 */
+$--font-path: '~element-ui/lib/theme-chalk/fonts';
+
+@import "~element-ui/packages/theme-chalk/src/index";

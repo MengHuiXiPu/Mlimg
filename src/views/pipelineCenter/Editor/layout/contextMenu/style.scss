@@ -1,0 +1,48 @@
+.context-menu {
+  background: #fff;
+  width: 140px;
+  position: absolute;
+  border: 1px solid #eef0f2;
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px 0px rgba(67, 75, 91, 0.10);
+  box-sizing: border-box;
+  padding: 8px;
+  z-index: 99;
+}
+
+.item {
+  box-sizing: content-box;
+  padding: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: PingFang SC, PingFang SC-Regular;
+  color: #434b5b;
+  height: 18px;
+  line-height: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.horizontal-line {
+  width: 100%;
+  margin: 8px 0;
+  background: #eef0f2;
+  height: 1px;
+}
+
+.item:hover {
+  background: #edf5ff;
+  border-radius: 6px;
+}
+
+.disabled {
+  color: #b3b1b1;
+  cursor: no-drop;
+  // cursor: not-allowed;
+
+  &:hover {
+    background: transparent;
+    border-radius: unset;
+  }
+}

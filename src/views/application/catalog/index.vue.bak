@@ -1,0 +1,1519 @@
+<template>
+  <div class="page-content">
+    <!-- <a-header
+      :auth="{ add: 'catalog-list-add', makeAll: 'task-make-all' }"
+      :tab-list="tabList"
+      :showNew="false"
+      :showAll="tabActiveKey === 0"
+      :showDownload="true"
+      :showSearchType="true"
+      :showUpload="true"
+      :tab-active-key="tabActiveKey"
+      :placeholderText="'请输入预测任务'"
+      @tab-change="tabOnChange"
+      @create="handCreate"
+      @reload="handReload"
+      @search="handSearch"
+      @upload="handUpload"
+      @makeAll="makeAllType = true"
+      @download="exportThreshold"
+      @searchTypeChange="(val) => (searchType = val)"
+    /> -->
+    <div class="toolbar space-between">
+      <el-form :inline="true" :model="searchFormData" size="small" ref="refSearchForm">
+        <el-form-item label="名称" prop="name">
+          <el-input v-model="searchFormData.name" placeholder="请输入" clearable>
+            <el-select v-model="searchType" slot="prepend">
+              <el-option value="task" label="任务"></el-option>
+              <el-option value="model" label="模型"></el-option>
+            </el-select>
+          </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handSearch">查询</el-button>
+          <el-button type="primary" plain @click="handReload">重置</el-button>
+        </el-form-item>
+      </el-form>
+      <div style="margin-bottom: 18px;">
+        <!-- <el-button type="primary" @click="handUpload" icon="el-icon-upload">导入</el-button>
+        <el-button type="primary" @click="exportThreshold" icon="el-icon-download">导出</el-button> -->
+      </div>
+    </div>
+    <step-layout class="mainContent">
+      <template slot="leftOffline" v-if="false">
+        <tree
+          :auth="{
+            add: 'catalog-tree-add',
+            rename: 'catalog-tree-rename',
+            delete: 'catalog-tree-delete',
+          }"
+          :url-object="treeApi"
+          :tabActiveKey="tabActiveKey"
+          ref="tree"
+          @searchData="getDataList"
+          :total="total"
+        ></tree>
+      </template>
+      <template slot="rightOffline">
+        <a-table
+          v-resize
+          :rowKey="(record) => record.id"
+          :columns="columns"
+          :data-source="tableData"
+          @change="tableDataChange"
+          :loading="loading"
+          :pagination="pagination.total > 10 ? pagination : false"
+        >
+          <span slot="name" slot-scope="text, record" :title="text">
+            <span
+              class="image-name"
+              @click="toDetail(record)"
+              :style="{
+                color: !record.taskStatus ? '#333' : '',
+                'margin-left': record.runMode === null ? '36px' : '',
+              }"
+            >
+              <a-tag
+                v-if="record.runMode !== null"
+                :color="record.runMode === 0 ? '#4aa6e8' : '#52c41a'"
+                style="zoom: 0.8; margin-right: 2px; border-radius: 10px"
+              >
+                {{ record.runMode === 0 ? "常驻" : "自动" }}
+              </a-tag>
+              {{ text }}
+            </span>
+            <!-- <span style="float: right">|</span> -->
+          </span>
+          <span
+            slot="modelName"
+            slot-scope="text, record"
+            :title="`${text}(${record.modelVersionLabel})`"
+          >
+            {{
+              tabActiveKey === 0 ? `${text}(${record.modelVersionLabel})` : text
+            }}
+          </span>
+          <span slot="taskStatusName" slot-scope="record">
+            <template v-if="record.taskStatus === 2">
+              <a-tag color="#87d068"> 已启动 </a-tag>
+            </template>
+            <template v-else-if="record.taskStatus === 1">
+              <a-tag color="#f50"> 未启动 </a-tag>
+            </template>
+            <template v-else-if="record.taskStatus === 3">
+              <a-tag>
+                {{ record.taskStatusName }}<a-icon type="loading" />
+              </a-tag>
+            </template>
+            <template v-else-if="record.taskStatus === 4">
+              <a-popover
+                title="异常信息"
+                trigger="hover"
+                class="red-color"
+                v-if="record.taskStatus === 4"
+              >
+                <template slot="content">
+                  <p>{{ record.remark }}</p>
+                </template>
+                <span>
+                  <a-tag color="#f50">
+                    {{ record.taskStatusName }}
+                  </a-tag>
+                </span>
+              </a-popover>
+            </template>
+            <template v-else>
+              <a-tag>
+                {{ record.taskStatusName }}
+              </a-tag>
+            </template>
+          </span>
+          <span slot="updateTime" slot-scope="text">
+            {{ text | moment }}
+          </span>
+          <span slot="createTime" slot-scope="text">
+            {{ text | moment }}
+          </span>
+          <span slot="operate" slot-scope="record, text, index">
+            <a-popconfirm
+              ok-text="确定"
+              cancel-text="取消"
+              @confirm="handleChange(record, index)"
+              :disabled="!record.taskStatus || record.taskStatus === 4"
+            >
+              <p slot="title">
+                {{ record.taskStatus !== 1 ? "确认下线" : "确认上线" + "么?" }}
+              </p>
+              <!-- <a
+                :class="record.taskStatus === 2?'redColor':record.taskStatus === 1?'blueColor':''"
+              >{{ getShowName(record.taskStatus) }}</a> -->
+              <a-icon
+                v-action:catalog-list-online
+                type="pause-circle"
+                v-if="record.taskStatus === 2 || record.taskStatus === 3"
+                style="color: #f50; cursor: pointer; font-size: 16px"
+              />
+              <a-icon
+                type="play-circle"
+                v-action:catalog-list-online
+                v-else
+                :style="{
+                  color: record.taskStatus !== 1 ? '#ccc' : '#87d068',
+                  cursor: record.taskStatus !== 1 ? 'no-drop' : 'pointer',
+                  'font-size': '16px',
+                }"
+              />
+            </a-popconfirm>
+            <a-dropdown :trigger="['click']">
+              <a
+                class="ant-dropdown-link"
+                @click="(e) => e.preventDefault()"
+                style="margin-left: 5px"
+              >
+                更多
+              </a>
+              <a-menu slot="overlay">
+                <a-menu-item key="0" v-action:catalog-list-change>
+                  <a
+                    href="javascript:;"
+                    :disabled="record.taskStatus !== 2"
+                    @click="handleToggleMode(record)"
+                    >切换模式</a
+                  >
+                </a-menu-item>
+                <a-menu-item key="1" v-action:catalog-list-rename>
+                  <a href="javascript:;" @click="handleRename(record)"
+                    >重命名</a
+                  >
+                </a-menu-item>
+                <!--                <a-menu-item-->
+                <!--                    @click="toMiddleResult(record)"-->
+                <!--                >-->
+                <!--                  中间结果-->
+                <!--                </a-menu-item>-->
+                <a-menu-item key="3" v-action:catalog-list-edit
+                  ><a href="javascript:;" @click="handleRigging(record)"
+                    >任务配置</a
+                  ></a-menu-item
+                >
+                <a-menu-item key="4" v-action:catalog-list-delete
+                  ><a href="javascript:;" @click="handleDelete(record, index)"
+                    >删除任务</a
+                  ></a-menu-item
+                >
+                <a-menu-item key="5">
+                  <a href="javascript:;" @click="showTaskLog(record)"
+                    >操作日志</a
+                  >
+                </a-menu-item>
+                <!--                <a-menu-item key="6">-->
+                <!--                  <a href="javascript:;" @click="showMoveNode(record)">移动节点</a>-->
+                <!--                </a-menu-item>-->
+                <a-menu-item key="7">
+                  <a
+                    href="javascript:;"
+                    :disabled="!record.configId"
+                    @click="showCreateFormTask(record)"
+                    >复制任务</a
+                  >
+                </a-menu-item>
+                 <a-menu-item key="8">
+                   <a href="javascript:;" @click="handleDeployConfig(record)">部署配置</a>
+                 </a-menu-item>
+                 <a-menu-item key="9">
+                   <a href="javascript:;" @click="versionSwitch(record)">版本切换</a>
+                 </a-menu-item>
+                <a-menu-item key="10">
+                   <a href="javascript:;" @click="versionRollback(record)">版本回滚</a>
+                 </a-menu-item>
+                <a-menu-item key="11">
+                   <a href="javascript:;" @click="startTask(record)">启动服务</a>
+                 </a-menu-item>
+                <a-menu-item key="12">
+                   <a href="javascript:;" @click="stopTask(record)">停止服务</a>
+                 </a-menu-item>
+                <a-menu-item key="13">
+                   <a href="javascript:;" @click="deleteTask(record)">删除服务</a>
+                 </a-menu-item>
+              </a-menu>
+            </a-dropdown>
+            <!-- <a
+              type="link"
+              :class="{
+                'aButton-style': true,
+                'mr-8': true,
+              }"
+              @click="
+                exportEachTask(
+                  record.pipInstanceId,
+                  record.configId,
+                  record.name
+                )
+              "
+              >导出</a -->
+            >
+          </span>
+          <div
+            slot="createTimeFilter"
+            slot-scope="{ confirm, clearFilters }"
+            style="padding: 10px"
+          >
+            <a-range-picker
+              v-model="createTimeFilter"
+              :show-time="{ format: 'HH:mm:ss' }"
+              format="YYYY-MM-DD HH:mm:ss"
+              :placeholder="['开始时间', '结束时间']"
+              @ok="() => filterCreateTime(confirm)"
+            />
+            <a-button
+              type="primary"
+              size="small"
+              @click="filterClearCreateTime(clearFilters)"
+              >重置</a-button
+            >
+          </div>
+          <div
+            slot="updateTimeFilter"
+            slot-scope="{ confirm }"
+            style="padding: 10px"
+          >
+            <a-range-picker
+              v-model="updateTimeFilter"
+              :show-time="{ format: 'HH:mm:ss' }"
+              format="YYYY-MM-DD HH:mm:ss"
+              :placeholder="['开始时间', '结束时间']"
+              @ok="() => filterUpdateTime(confirm)"
+            />
+            <a-button
+              type="primary"
+              size="small"
+              @click="filterClearUpdateTime(clearFilters)"
+              >重置</a-button
+            >
+          </div>
+        </a-table>
+      </template>
+    </step-layout>
+    <addEditDialog
+      ref="addEditDialog"
+      :allData="allData"
+      :pagination="pagination.total > 10 ? pagination : false"
+      @getDataList="getDataList"
+    ></addEditDialog>
+    <addEditDialogGroup
+      ref="addEditDialogGroup"
+      :allData="allData"
+      :pagination="pagination.total > 10 ? pagination : false"
+      @getDataList="getDataList"
+    ></addEditDialogGroup>
+    <addFormTask ref="addFormTask" @getDataList="getDataList" />
+    <a-modal
+      v-model="renameVisible"
+      title="重命名"
+      @ok="handleRenameOk"
+      :maskClosable="false"
+    >
+      <div class="slot-name">
+        <span class="name"><span style="color: red">*</span>任务名称:</span>
+        <a-input placeholder="请输入任务名称" :maxLength="50" v-model="name" />
+      </div>
+    </a-modal>
+
+    <a-modal
+      v-model="changeModeVisible"
+      title="切换任务模式"
+      @ok="handleModeOk"
+      :maskClosable="false"
+    >
+      <div class="slot-name">
+        <span class="name"><span style="color: red">*</span>任务模式:</span>
+        <a-select v-model="mode">
+          <a-select-option :value="1"> 正式模式 </a-select-option>
+          <a-select-option :value="2"> 测试模式 </a-select-option>
+        </a-select>
+      </div>
+    </a-modal>
+
+    <a-modal v-model="makeAllType" title="一键上下线" :maskClosable="false">
+      <p>
+        <span>一键上线：<br />将状态为【未启动】的任务全部进行上线操作</span
+        ><br />
+        <span>一键下线：<br />将状态为【已启动】的任务全部进行下线操作</span
+        ><br />
+        <span>(注意：该功能只针对运行模型设置为【自动】的任务有效)</span>
+      </p>
+      <template slot="footer">
+        <a-button type="primary" @click="makeAllFun(false)">
+          一键下线
+        </a-button>
+        <a-button type="primary" @click="makeAllFun(true)"> 一键上线 </a-button>
+      </template>
+    </a-modal>
+    <a-modal
+      v-model="changeUploadVisible"
+      title="导入任务"
+      @ok="handleUploadOk"
+      :maskClosable="false"
+    >
+      <a-form-model
+        ref="operatorForm"
+        :label-col="{ span: 6 }"
+        :wrapper-col="{ span: 18 }"
+        layout="horizontal"
+        :model="rowData"
+        :rules="rules"
+      >
+        <a-form-model-item label="文件名称" prop="taskName">
+          <a-input
+            v-model="rowData.taskName"
+            :disabled="true"
+            class="fileName"
+          />
+          <a-upload :showUploadList="false" :before-upload="beforeUpload">
+            <a-button type="default"
+              ><a-icon type="upload"></a-icon>上传文件</a-button
+            >
+          </a-upload>
+        </a-form-model-item>
+        <a-form-model-item
+          label="存放目录"
+          prop="storedDirName"
+          style="vertical-align: middle"
+        >
+          <a-tree-select
+            v-model="rowData.storedDirName"
+            showSearch
+            allowClear
+            size="large"
+            :filterTreeNode="fillterFUN"
+            style="width: calc(100% - 70px)"
+            :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
+            :tree-data="treeData"
+            :load-data="onLoadData"
+            placeholder="请选择存放目录"
+            @select="onSelect"
+            :disabled="currentTask"
+          />
+          <a-button
+            :disabled="currentTask"
+            size="small"
+            @click="() => this.$refs.createTree.showModal()"
+            class="addNode"
+            style="margin-top: 3px"
+            type="primary"
+          >
+            新增目录
+          </a-button>
+        </a-form-model-item>
+        <a-form-model-item label="描述" prop="description">
+          <a-textarea type="text" v-model="rowData.description" />
+        </a-form-model-item>
+      </a-form-model>
+    </a-modal>
+    <task-log ref="taskLog" />
+    <move-node ref="moveNode" @reload="reloadTree" />
+    <create-tree
+      ref="createTree"
+      @getTree="getTree"
+      :urlObject="{
+        get: 'getModelTreeList',
+        post: 'savaModelTreeList',
+      }"
+    />
+
+    <a-modal
+        ref="deployConfigDialog"
+        title="部署配置"
+        :visible="deployConfigVisible"
+        @ok="handleDeployConfigOk"
+        @cancel="handleDeployConfigCancel"
+        width="540px"
+    >
+      <a-form-model
+          ref="deployConfigForm"
+          :label-col="{ span: 6 }"
+          :wrapper-col="{ span: 18 }"
+          layout="horizontal"
+          :rules="rules"
+      >
+        <a-form-model-item label="算力资源池" prop="resourcePool">
+          <a-select placeholder="请选择">
+            <a-select-option :value="1"> 资源池1 </a-select-option>
+            <a-select-option :value="2"> 资源池2 </a-select-option>
+          </a-select>
+          <span style="font-size: xx-small; color: #a89028">
+            资源池总配额: {{deployConfig.totalCore}}core {{deployConfig.totalMemory}}GB {{deployConfig.CardType}}({{ deployConfig.vram }}GB)* {{ deployConfig.totalCardQty }}卡，
+            <br>
+            当前空闲: {{deployConfig.availableCore}}core {{deployConfig.availableMemory}}GB {{deployConfig.CardType}}({{ deployConfig.vram }}GB)* {{ deployConfig.availableCardQty }}卡
+          </span>
+          <br>
+          <span>资源类型：</span>
+          <a-radio-group v-model="deployConfig.resourceType" @change="onDeployConfigResourceTypeChange">
+            <a-radio value="cpu">
+              CPU类型
+            </a-radio>
+            <a-radio value="gpu">
+              GPU类型
+            </a-radio>
+          </a-radio-group>
+          <br>
+          <span>资源规格：</span>
+          <a-radio-group v-model="deployConfig.resourceSpn" @change="onDeployConfigResourceSpnChange">
+            <a-radio :value="1">
+              固定配额<span style="font-size: xx-small; color: #a89028; margin-left: 2px">推荐</span>
+            </a-radio>
+            <a-radio :value="2">
+              自定义配额
+            </a-radio>
+          </a-radio-group>
+          <div v-if="deployConfig.resourceSpn===1" style="background-color: #F2F2F2; padding: 10px">
+            <a-row>
+              配额：
+              <a-select style="width: 200px" placeholder="请选择">
+                <a-select-option :value="1"> CPU: 1 core 内存: 4G  </a-select-option>
+                <a-select-option :value="2"> CPU: 1 core 内存: 4G GPU: P100(12GB) </a-select-option>
+              </a-select>
+            </a-row>
+            <a-row><span>✖</span></a-row>
+            <a-row>
+              实例数量: <a-input-number placeholder="请输入" v-model="deployConfig.quotaQty" :max="10000" :min="0" style="width: 80px" ></a-input-number>
+            </a-row>
+          </div>
+          <div v-else-if="deployConfig.resourceSpn===2" style="background-color: #F2F2F2; padding: 10px">
+            <a-row>
+              <a-col :span="12">
+                CPU: <a-input-number :max="10000" :min="0" v-model="deployConfig.customQuota.core" placeholder="请输入" style="width: 95px"></a-input-number> core
+              </a-col>
+              <a-col :span="12">
+                内存: <a-input-number :max="10000" :min="0" v-model="deployConfig.customQuota.memory" placeholder="请输入" style="width: 95px"></a-input-number> GB
+              </a-col>
+            </a-row>
+            <a-row>
+              <a-col :span="12">
+                GPU: <a-select style="width: 95px" placeholder="请选择">
+                <a-select-option :value="1"> P100 </a-select-option>
+                <a-select-option :value="2"> V100 </a-select-option>
+              </a-select>
+              </a-col>
+              <a-col :span="12">
+                显存: <a-input-number :max="10000" :min="0" v-model="deployConfig.customQuota.vram" placeholder="请输入" style="width: 95px"></a-input-number> GB
+              </a-col>
+            </a-row>
+            <a-row><span>✖</span></a-row>
+            <a-row>
+              实例数量: <a-input-number placeholder="请输入" v-model="deployConfig.quotaQty" :max="10000" :min="0" style="width: 80px" ></a-input-number>
+            </a-row>          </div>
+        </a-form-model-item>
+        <a-form-model-item label="数据源挂载" prop="sjygz">
+          <a-select placeholder="请选择">
+            <a-select-option :value="1"> NAS1 </a-select-option>
+            <a-select-option :value="2"> NAS2 </a-select-option>
+            <a-select-option :value="3"> NAS3 </a-select-option>
+            <a-select-option :value="4"> NAS4 </a-select-option>
+          </a-select>
+          <br>
+          <a-button
+              size="small"
+              type="primary"
+          >
+            新增挂载
+          </a-button>
+        </a-form-model-item>
+      </a-form-model>
+    </a-modal>
+
+    <a-modal :visible="versionSwitchVisible"
+             title="版本切换"
+             @ok="versionSwitchOk"
+             @cancel="versionSwitchCancel"
+             width="540px">
+      <a-form-model
+          ref="deployConfigForm"
+          :label-col="{ span: 6 }"
+          :wrapper-col="{ span: 18 }"
+          layout="horizontal"
+          :rules="rules"
+      >
+
+        <span style="width: 100%">平台使用滚动更新方式，切换版本不会导致服务中断，请确认是否执行切换。</span>
+        <a-form-model-item label="当前版本号" prop="currentVersion">
+          {{deployConfig.currentVersion}}
+        </a-form-model-item>
+        <a-form-model-item label="启动版本号" prop="switchVersion">
+          <a-select placeholder="请选择">
+            <a-select-option :value="1"> v0.4 </a-select-option>
+            <a-select-option :value="2"> v0.3 </a-select-option>
+            <a-select-option :value="3"> v0.2 </a-select-option>
+            <a-select-option :value="4"> v0.1 </a-select-option>
+          </a-select>
+          <span style="font-size: xx-small; color: #a89028">平台默认显示最新的版本号</span>
+        </a-form-model-item>
+        <a-form-model-item label="算力资源池" prop="resourcePool">
+          <a-select placeholder="请选择">
+            <a-select-option :value="1"> 资源池1 </a-select-option>
+            <a-select-option :value="2"> 资源池2 </a-select-option>
+          </a-select>
+          <span style="font-size: xx-small; color: #a89028">
+            资源池总配额: {{deployConfig.totalCore}}core {{deployConfig.totalMemory}}GB {{deployConfig.CardType}}({{ deployConfig.vram }}GB)* {{ deployConfig.totalCardQty }}卡，
+            <br>
+            当前空闲: {{deployConfig.availableCore}}core {{deployConfig.availableMemory}}GB {{deployConfig.CardType}}({{ deployConfig.vram }}GB)* {{ deployConfig.availableCardQty }}卡
+          </span>
+          <br>
+          <span>资源类型：</span>
+          <a-radio-group v-model="deployConfig.resourceType" @change="onDeployConfigResourceTypeChange">
+            <a-radio value="cpu">
+              CPU类型
+            </a-radio>
+            <a-radio value="gpu">
+              GPU类型
+            </a-radio>
+          </a-radio-group>
+          <br>
+          <span>资源规格：</span>
+          <a-radio-group v-model="deployConfig.resourceSpn" @change="onDeployConfigResourceSpnChange">
+            <a-radio :value="1">
+              固定配额<span style="font-size: xx-small; color: #a89028; margin-left: 2px">推荐</span>
+            </a-radio>
+            <a-radio :value="2">
+              自定义配额
+            </a-radio>
+          </a-radio-group>
+          <div v-if="deployConfig.resourceSpn===1" style="background-color: #F2F2F2; padding: 10px">
+            <a-row>
+              配额：
+              <a-select style="width: 200px" placeholder="请选择">
+                <a-select-option :value="1"> CPU: 1 core 内存: 4G  </a-select-option>
+                <a-select-option :value="2"> CPU: 1 core 内存: 4G GPU: P100(12GB) </a-select-option>
+              </a-select>
+            </a-row>
+            <a-row><span>✖</span></a-row>
+            <a-row>
+              实例数量: <a-input-number placeholder="请输入" v-model="deployConfig.quotaQty" :max="10000" :min="0" style="width: 80px" ></a-input-number>
+            </a-row>
+          </div>
+          <div v-else-if="deployConfig.resourceSpn===2" style="background-color: #F2F2F2; padding: 10px">
+            <a-row>
+              <a-col :span="12">
+                CPU: <a-input-number :max="10000" :min="0" v-model="deployConfig.customQuota.core" placeholder="请输入" style="width: 95px"></a-input-number> core
+              </a-col>
+              <a-col :span="12">
+                内存: <a-input-number :max="10000" :min="0" v-model="deployConfig.customQuota.memory" placeholder="请输入" style="width: 95px"></a-input-number> GB
+              </a-col>
+            </a-row>
+            <a-row>
+              <a-col :span="12">
+                GPU: <a-select style="width: 95px" placeholder="请选择">
+                <a-select-option :value="1"> P100 </a-select-option>
+                <a-select-option :value="2"> V100 </a-select-option>
+              </a-select>
+              </a-col>
+              <a-col :span="12">
+                显存: <a-input-number :max="10000" :min="0" v-model="deployConfig.customQuota.vram" placeholder="请输入" style="width: 95px"></a-input-number> GB
+              </a-col>
+            </a-row>
+            <a-row><span>✖</span></a-row>
+            <a-row>
+              实例数量: <a-input-number placeholder="请输入" v-model="deployConfig.quotaQty" :max="10000" :min="0" style="width: 80px" ></a-input-number>
+            </a-row>          </div>
+        </a-form-model-item>
+        <a-form-model-item label="数据源挂载" prop="sjygz">
+          <a-select placeholder="请选择">
+            <a-select-option :value="1"> NAS1 </a-select-option>
+            <a-select-option :value="2"> NAS2 </a-select-option>
+            <a-select-option :value="3"> NAS3 </a-select-option>
+            <a-select-option :value="4"> NAS4 </a-select-option>
+          </a-select>
+          <br>
+          <a-button
+              size="small"
+              type="primary"
+          >
+            新增挂载
+          </a-button>
+        </a-form-model-item>
+      </a-form-model>
+    </a-modal>
+
+    <a-modal :visible="versionRollbackVisible"
+             title="版本切换"
+             @ok="versionRollbackOk"
+             @cancel="versionRollbackCancel"
+             width="540px"
+    >
+      <a-row>
+        <a-col :span="12">
+          <a-col :span="12">
+            当前版本：
+          </a-col>
+          <a-col :span="12">
+            {{deployConfig.currentVersion}}
+          </a-col>
+        </a-col>
+        <a-col :span="12">
+          <a-col :span="12">
+            上一版本：
+          </a-col>
+          <a-col :span="12">
+            {{deployConfig.previousVersion}}
+          </a-col>
+        </a-col>
+      </a-row>
+      <a-row>
+        <span style="width: 100%">平台使用滚动更新方式，切换版本不会导致服务中断，请确认是否执行回滚。</span>
+      </a-row>
+    </a-modal>
+
+    <a-modal
+        v-model="startTaskVisible"
+        title="启动服务"
+        @ok="startTaskOk"
+        @cancel="startTaskCancel"
+    >
+      <a-row>
+        <span>启动版本号:</span>
+        <a-select placeholder="请选择" style="width: 100%">
+          <a-select-option value="v0.4">v0.4</a-select-option>
+          <a-select-option value="v0.3">v0.3</a-select-option>
+          <a-select-option value="v0.2">v0.2</a-select-option>
+          <a-select-option value="v0.1">v0.1</a-select-option>
+        </a-select>
+        <span style="font-size: xx-small; color: #a89028">
+          平台检测检测到新版本v0.5，请仔细确认需要启动的版本号
+        </span>
+      </a-row>
+    </a-modal>
+  </div>
+</template>
+<script>
+import { mixinHeader } from "@/utils/mixin";
+import { getParams, downloadFile } from "@/utils/util";
+import splitPane from "vue-splitpane";
+import {
+  getApplicationcenterList,
+  editApplicationcenterName,
+  editApplicationcenter,
+  deleteApplicationcenter,
+  inferenceTaskStartOrStop,
+  changeTaskStatusToAll,
+  exportTaskThreshold,
+} from "@/api/appCenter";
+import taskLog from "./taskLog";
+import moveNode from "./moveNode";
+import bus from "@/utils/bus";
+import moment from "moment";
+import StepLayout from "@/components/StepLayout";
+import { getModelTreeList } from "@/api/dataCenter";
+import Operator from "@/api/operator";
+import createTree from "@/components/tree/createTree";
+import { saveAs } from "file-saver";
+import { h } from 'vue';
+import { Select } from 'ant-design-vue';
+export default {
+  name: "CataLog",
+  mixins: [mixinHeader],
+  components: {
+    tree: () => ({ component: import("@/components/tree") }),
+    addEditDialog: () => ({ component: import("./addEditDialog") }),
+    addEditDialogGroup: () => ({ component: import("./addEditDialogGroup") }),
+    addFormTask: () => ({ component: import("./addFormTask") }),
+    "split-pane": splitPane,
+    taskLog,
+    moveNode,
+    StepLayout,
+    createTree,
+  },
+  data() {
+    return {
+      loading: false,
+      changeModeVisible: false,
+      deployConfigVisible: false,
+      versionSwitchVisible: false,
+      versionRollbackVisible: false,
+      startTaskVisible: false,
+      renameVisible: false,
+      dlTagTypeFilter: {},
+      tableData: [],
+      tabActiveKey: 0,
+      // columns: ,
+      total: 0,
+      changeUploadVisible: false,
+      // 表单数据
+      rowData: {
+        file: null,
+        taskName: "",
+        storedDirId: "",
+        storedDirName: "",
+        description: "",
+      },
+      rules: {
+        taskName: [
+          {
+            required: true,
+            message: "请选择文件",
+            trigger: "blur",
+          },
+        ],
+        storedDirName: [
+          { required: true, message: "请选择存放目录!", trigger: "change" },
+        ],
+      },
+      treeData: [],
+      pagination: {
+        total: 0,
+        pageSize: 10,
+        current: 1,
+        showSizeChanger: true,
+        pageSizeOptions: ["10", "20", "30", "50"],
+        showTotal: function (total) {
+          return `共 ${total} 条`;
+        },
+      },
+      treeApi: {
+        search: "getAppTaskTreeList",
+        add: "savaAppTaskTreeList",
+        edit: "editAppTaskTreeList",
+        delete: "deleteAppTaskTreeList",
+      },
+      tabList: [
+        { key: 0, name: "任务列表" },
+        { key: 1, name: "任务组", auth: "task-list" },
+      ],
+      search: "",
+      name: "",
+      mode: "",
+      allData: {},
+      makeAllType: false,
+      statusList: [
+        {
+          text: "未配置",
+          value: "未配置",
+          id: 0,
+        },
+        {
+          text: "未启动",
+          value: "下线",
+          id: 1,
+        },
+        {
+          text: "已启动",
+          value: "上线",
+          id: 2,
+        },
+        {
+          text: "服务启动中",
+          value: "服务启动中",
+          id: 3,
+        },
+        {
+          text: "服务异常终止",
+          value: "服务异常终止",
+          id: 4,
+        },
+      ],
+      runningMode: [
+        {
+          text: "正式模式",
+          value: "正式模式",
+          id: 1,
+        },
+        {
+          text: "测试模式",
+          value: "测试模式",
+          id: 2,
+        },
+      ],
+      createTimeFilter: [],
+      updateTimeFilter: [],
+      filterType: {
+        taskStatus: null,
+        taskMode: null,
+        createStartTime: null,
+        createEndTime: null,
+        updateStartTime: null,
+        updateEndTime: null,
+      },
+      filter: {},
+      uid: null,
+      searchType: 'task',
+      searchFormData: {
+        name: '',
+      },
+
+      //部署配置
+      deployConfig: {
+        previousVersion: 'v0.2',
+        currentVersion: 'v0.3',
+        switchVersion: null,
+
+        totalCore: 48,
+        totalMemory: 128,
+        CardType: 'P100',
+        vram: 32,
+        totalCardQty: 4,
+        availableCore: 24,
+        availableMemory: 64,
+        availableVram: 32,
+        availableCardQty: 2,
+
+        resourcePool: null,
+        resourceType: null,
+        resourceSpn: null,
+        fixedQuota: null,
+        customQuota: {
+          core: null,
+          memory: null,
+          card: null,
+          vram: null
+        },
+        quotaQty: null,
+        dataSource: null
+      },
+      radioStyle: {
+        display: 'block',
+        height: '30px',
+        lineHeight: '30px',
+      },
+    };
+  },
+  watch: {
+    storedDirId(value) {
+      // console.log("storedDirId++++++: ", value);
+      this.rowData.storedDirId = value;
+    },
+  },
+  computed: {
+    currentTask() {
+      return false;
+    },
+    columns() {
+      return [
+        {
+          title: (
+            <div>{this.tabActiveKey === 0 ? "服务名称" : "任务组名称"}</div>
+          ),
+          dataIndex: "taskName",
+          key: "taskName",
+          ellipsis: true,
+          scopedSlots: { customRender: "name" },
+          width: "15%",
+          // align:  "center"
+        },
+        {
+          title: "当前版本",
+          dataIndex: "currentVersion",
+          width: 75,
+          key: "currentVersion",
+          // align:  "center"
+        },
+        {
+          title: "版本数量",
+          dataIndex: "versionQty",
+          width: 75,
+          key: "versionQty",
+          // align:  "center"
+        },
+        {
+          title: "服务状态",
+          dataIndex: "",
+          align: "center",
+          key: "taskStatusName",
+          filters: this.statusList,
+          filterMultiple: false,
+          width: 90,
+          scopedSlots: { customRender: "taskStatusName" },
+          // align:  "center"
+        },
+        {
+          title: "来源",
+          dataIndex: "source",
+          width: 75,
+          key: "source",
+          // align:  "center"
+        },
+        {
+          title: "资源规格",
+          dataIndex: "resourceSpn",
+          width: 75,
+          key: "resourceSpn",
+          // align:  "center"
+        },
+        // {
+        //   title: this.tabActiveKey === 0 ? "模型名称" : "模型组名称",
+        //   dataIndex: "modelName",
+        //   key: "modelName",
+        //   width: 190,
+        //   ellipsis: true,
+        //   scopedSlots: { customRender: "modelName" },
+        //   // align:  "center"
+        // },
+        // {
+        //   title: "资源模式",
+        //   dataIndex: "resouceModelName",
+        //   width: 75,
+        //   key: "resouceModelName",
+        //   // align:  "center"
+        // },
+        // {
+        //   title: "运行模式",
+        //   dataIndex: "taskModelName",
+        //   width: 90,
+        //   key: "taskModelName",
+        //   filters: this.runningMode,
+        //   filterMultiple: false,
+        //   // align:  "center"
+        // },
+        {
+          title: "创建时间",
+          dataIndex: "createTime",
+          scopedSlots: {
+            customRender: "createTime",
+            filterDropdown: "createTimeFilter",
+          },
+          filtered: this.filter.createStartTime && this.filter.createEndTime,
+          // filterDropdownVisible: true,
+          width: 180,
+          key: "createTime",
+          // align:  "center"
+        },
+        {
+          title: "修改时间",
+          dataIndex: "updateTime",
+          scopedSlots: {
+            customRender: "updateTime",
+            filterDropdown: "updateTimeFilter",
+          },
+          filtered: this.filter.updateStartTime && this.filter.updateEndTime,
+          // filterDropdownVisible: true,
+          width: 180,
+          key: "updateTime",
+          // align:  "center"
+        },
+        {
+          title: "操作",
+          dataIndex: "",
+          key: "x",
+          width: 90,
+          scopedSlots: { customRender: "operate" },
+          align: "center",
+        },
+      ];
+    },
+  },
+  beforeDestroy() {
+    bus.$off("reloadTask");
+  },
+  mounted() {
+    bus.$on("reloadTask", () => {
+      this.getDataList({ isFirst: true });
+    });
+    this.getDataList();
+    this.getTree();
+  },
+  methods: {
+    fillterFUN(searchVal, treeNode) {
+      return treeNode.data.props.title.includes(searchVal);
+    },
+    onLoadData(treeNode) {
+      const { id, nodeCode, storedDirName, storedDirId } = treeNode.dataRef;
+      const query = {
+        parentId: id,
+        parentCode: nodeCode,
+      };
+      return getModelTreeList(query).then((res) => {
+        const { data = [], code = 0 } = res;
+        if (res.code === 0) {
+          treeNode.dataRef.children = this.genTreeNode(
+            data,
+            storedDirName,
+            storedDirId
+          );
+          this.treeData = [...this.treeData];
+        }
+      });
+    },
+    onSelect(checkedKeys, node) {
+      this.$nextTick(() => {
+        this.rowData.storedDirName = node.dataRef.storedDirName;
+        this.rowData.storedDirId = node.dataRef.storedDirId;
+      });
+    },
+    getTree() {
+      const query = {
+        parentId: 0,
+        parentCode: "0;",
+      };
+      this.treeData = [];
+      getModelTreeList(query).then((res) => {
+        const { data = [], code = 0 } = res;
+        if (res.code === 0) {
+          this.treeData = this.genTreeNode(data);
+          console.log("this.treeData+++++: ", this.treeData);
+        }
+      });
+    },
+    genTreeNode(data, storedDirName, storedDirId) {
+      return data.map((item) => {
+        const { nodeName, nodeCode, id, childNodeNum } = item;
+        const names = storedDirName
+          ? `${storedDirName} / ${nodeName}`
+          : nodeName;
+        const ids = `${nodeCode}${id};`;
+        return {
+          id,
+          storedDirId: ids,
+          storedDirName: names,
+          value: ids, // value 设置为ids
+          title: nodeName,
+          nodeCode,
+          // disabled: childNodeNum !== 0,
+          isLeaf: childNodeNum === 0,
+        };
+      });
+    },
+    tabOnChange(val) {
+      this.tabActiveKey = val;
+      this.getDataList({ isFirst: true });
+    },
+    toDetail(rowData) {
+      if (!rowData.taskStatus) return false;
+      this.$router.push({
+        path: "/application/catalog/detail",
+        query: {
+          id: rowData.id,
+          pipId: rowData.pipId,
+          instanceId: rowData.pipInstanceId,
+        },
+      });
+    },
+    handReload() {
+      this.$refs.refSearchForm.resetFields();
+      this.handSearch();
+    },
+    handSearch() {
+      this.pagination.current = 1;
+      this.getDataList();
+    },
+    getDataList(params) {
+      this.getData(params);
+      // this.setTimer(this.getData, params, 15 * 1000)
+    },
+    async getData(param) {
+      const params = getParams(param, this, "catalog");
+      if (param?.isFirst) {
+        delete params.nodeId;
+        delete params.nodeCode;
+      }
+      params[this.searchType === "task" ? "taskName" : "modelName"] = this.searchFormData.name;
+      params.taskType = this.tabActiveKey;
+      params.nodeId = 0;
+      Object.assign(params, { ...this.filterType });
+      const responseData = await getApplicationcenterList(params);
+      if (responseData.code === 0) {
+        this.loading = false;
+        this.uid = responseData.msg || null;
+        this.tableData = responseData.data.records;
+        this.pagination.total = responseData.data.total;
+        this.total = responseData.data.total;
+        // if (param?.isFirst) {
+        //   this.total = responseData.data.total
+        // } else {
+        //   getApplicationcenterList().then(res => {
+        //     this.total = res.data.total
+        //   })
+        // }
+        clearTimeout(this.timer);
+        if (this.tableData.filter((item) => item.taskStatus === 3).length > 0) {
+          this.setTimeOut(this.getData, param, 15 * 1000);
+        }
+      }
+    },
+    toMiddleResult(record) {
+      this.$router.push({
+        path: `/application/catalog/middleResult`,
+        query: { modelType: this.tabActiveKey, id: record.id },
+      });
+    },
+    tableDataChange(pagination, filters) {
+      console.log(filters);
+      this.filter = JSON.parse(JSON.stringify(filters));
+      const { createStartTime, createEndTime, updateStartTime, updateEndTime } =
+        filters;
+      this.filterType = {
+        taskStatus:
+          filters?.taskStatusName && filters.taskStatusName.length > 0
+            ? this.statusList.filter(
+                (item) => filters.taskStatusName[0] === item.value
+              )[0].id
+            : null,
+        taskMode:
+          filters?.taskModelName && filters.taskModelName.length > 0
+            ? this.runningMode.filter(
+                (item) => filters.taskModelName[0] === item.value
+              )[0].id
+            : null,
+        createStartTime,
+        createEndTime,
+        updateStartTime,
+        updateEndTime,
+      };
+      this.getDataList({
+        pageSize: pagination.pageSize,
+        pageIndex: pagination.current,
+        taskName: this.taskName,
+      });
+      this.pagination.pageSize = pagination.pageSize;
+      this.pagination.current = pagination.current;
+    },
+    async handleModeOk() {
+      const params = {
+        taskModel: this.mode,
+        id: this.allData.configId,
+      };
+      const data = await editApplicationcenter(params);
+      if (data.code === 0) {
+        this.getDataList({
+          taskName: this.taskName,
+          pageSize: this.pagination.pageSize,
+          pageIndex: this.pagination.current,
+        });
+        this.$message.success("修改成功！");
+      }
+      this.changeModeVisible = false;
+    },
+    async handleRenameOk() {
+      const data = await editApplicationcenterName({
+        id: this.allData.id,
+        taskName: this.name,
+      });
+      if (data.code === 0) {
+        this.getDataList({
+          pageSize: this.pagination.pageSize,
+          pageIndex: this.pagination.current,
+        });
+        this.$message.success("修改成功！");
+      }
+      this.renameVisible = false;
+    }, //确认重命名时触发
+    handleToggleMode(rowData) {
+      this.changeModeVisible = true;
+      this.mode = rowData.taskModel;
+      this.allData = { ...rowData };
+    },
+    async handleChange(rowData, index) {
+      const { configId, id, taskStatus } = rowData;
+      if (taskStatus === 4) {
+        return false;
+      }
+      const params = {
+        configId,
+        taskId: id,
+      };
+      // 任务状态为1，当前是下线状态，可以上线
+      const type =
+        taskStatus === 1 ? "inferenceTaskStart" : "inferenceTaskStop";
+      const data = await inferenceTaskStartOrStop(type, params);
+      if (data.code === 0) {
+        this.getDataList({
+          pageSize: this.pagination.pageSize,
+          pageIndex: this.pagination.current,
+        });
+        this.$message.success("修改成功！");
+      }
+    },
+    showCreateFormTask(record) {
+      this.$refs.addFormTask.showModal(record.id);
+    },
+    handleRigging(rowData) {
+      this.allData = { ...rowData };
+      this.$nextTick(() => {
+        if (this.tabActiveKey === 0) {
+          this.$refs.addEditDialog.showDialog();
+        } else {
+          this.$refs.addEditDialogGroup.showDialog();
+        }
+      });
+    },
+    handleRename(rowData) {
+      this.name = rowData.taskName;
+      this.allData = { ...rowData };
+      this.renameVisible = true;
+    },
+    handleDelete(rowData, index) {
+      const that = this;
+      this.$confirm({
+        content: `确定要删除 ${rowData.taskName} 吗?`,
+        cancelText: "取消",
+        okText: "确定",
+        onOk() {
+          deleteApplicationcenter(rowData.id).then((res) => {
+            if (res.code === 0) {
+              that.$message.success("删除成功!");
+              if (that.tableData.length === 1 && that.pagination.total !== 1)
+                that.pagination.current--;
+              that.getDataList({
+                pageSize: that.pagination.pageSize,
+                pageIndex: that.pagination.current,
+              });
+            }
+          });
+        },
+        onCancel() {},
+      });
+    },
+    async makeAllFun(type) {
+      this.makeAllType = false;
+      this.loading = true;
+      const getData = type
+        ? changeTaskStatusToAll.startAllTask
+        : changeTaskStatusToAll.stopAllTask;
+      const res = await getData();
+      this.loading = false;
+      if (res.code !== 0) return false;
+      this.$message.success("操作成功");
+      this.getDataList({ isFirst: true });
+    },
+    showTaskLog(record) {
+      this.$refs.taskLog.showModal(record.id);
+    },
+    showMoveNode(record) {
+      this.$refs.moveNode.showModal(record.id);
+    },
+    reloadTree() {
+      this.$refs.tree.activeData();
+    },
+    exportThreshold() {
+      downloadFile(exportTaskThreshold(this.tabActiveKey, this.uid));
+    },
+    // 每一项任务导出
+    async exportEachTask(id, name) {
+      console.log(id, name);
+      Operator.getTemplate(id).then((res) => {
+        console.log(res, "打包下载的结果");
+        const blob = new Blob([res], { type: "application/zip" });
+        saveAs(blob, `${name}.zip`);
+      });
+    },
+    // 上传
+    handUpload() {
+      this.changeUploadVisible = true;
+    },
+    handleUploadOk() {
+      this.$refs["operatorForm"].validate(async (valid) => {
+        if (valid) {
+          const formData = new FormData();
+          formData.append("file", this.rowData.file);
+          formData.append("taskName", this.rowData.taskName);
+          formData.append("description", this.rowData.description);
+          formData.append("storedDirId", this.rowData.storedDirId);
+          formData.append("storedDirName", this.rowData.storedDirName);
+          const res = await Operator.uploadTemplate(formData);
+          if (res.success) this.$message.success("导入成功");
+          else this.$message.error("导入失败");
+          this.getDataList();
+        }
+      });
+      this.changeUploadVisible = false;
+    },
+    beforeUpload(file) {
+      this.rowData.taskName = file.name.split(".")[0];
+      this.rowData.file = file;
+      return false;
+    },
+    filterCreateTime(confirm) {
+      const startTime = moment(this.createTimeFilter[0]).format(
+        "YYYY-MM-DD hh:mm:ss"
+      );
+      const endTime = moment(this.createTimeFilter[1]).format(
+        "YYYY-MM-DD hh:mm:ss"
+      );
+      this.$set(this.filter, "createStartTime", startTime);
+      this.$set(this.filter, "createEndTime", endTime);
+      this.tableDataChange(this.pagination, this.filter);
+      confirm();
+    },
+    filterUpdateTime(confirm) {
+      const startTime = moment(this.updateTimeFilter[0]).format(
+        "YYYY-MM-DD hh:mm:ss"
+      );
+      const endTime = moment(this.updateTimeFilter[1]).format(
+        "YYYY-MM-DD hh:mm:ss"
+      );
+      this.$set(this.filter, "updateStartTime", startTime);
+      this.$set(this.filter, "updateEndTime", endTime);
+      this.tableDataChange(this.pagination, this.filter);
+      confirm();
+      // console.log(confirm)
+    },
+    filterClearCreateTime(clearFilters) {
+      this.$set(this.filter, "createStartTime", null);
+      this.$set(this.filter, "createEndTime", null);
+      this.tableDataChange(this.pagination, this.filter);
+      clearFilters();
+    },
+    filterClearUpdateTime(clearFilters) {
+      this.$set(this.filter, "updateStartTime", null);
+      this.$set(this.filter, "updateEndTime", null);
+      this.tableDataChange(this.pagination, this.filter);
+      clearFilters();
+    },
+
+    handleDeployConfig(rowData) {
+      this.allData = { ...rowData };
+      this.$nextTick(() => {
+        this.deployConfigVisible = true
+      });
+    },
+    handleDeployConfigOk(e) {
+      console.log(e);
+      this.deployConfigVisible = false;
+    },
+    handleDeployConfigCancel(e) {
+      console.log('Clicked cancel button');
+      this.deployConfigVisible = false;
+    },
+
+    onDeployConfigResourceTypeChange(e) {
+    },
+    onDeployConfigResourceSpnChange(e) {
+    },
+
+    versionSwitch(rowData) {
+      this.$nextTick(() => {
+        this.versionSwitchVisible = true
+      });
+    },
+    versionRollback(rowData) {
+      this.$nextTick(() => {
+        this.versionRollbackVisible = true
+      });
+    },
+    versionSwitchOk(){
+      this.versionSwitchVisible = false
+    },
+    versionSwitchCancel(e) {
+      console.log('Clicked cancel button');
+      this.versionSwitchVisible = false;
+    },
+    versionRollbackOk(){
+      this.versionRollbackVisible = false
+    },
+    versionRollbackCancel(){
+      this.versionRollbackVisible = false
+    },
+
+    startTask(){
+      this.startTaskVisible = true
+    },
+    startTaskOk(){
+      this.startTaskVisible = false
+    },
+    startTaskCancel(){
+      this.startTaskVisible = false
+    },
+
+    stopTask(){
+      this.$confirm({
+        title: '停止服务',
+        content: '服务正在运行中，请确认是否停止服务？服务停止后，服务将无法被使用',
+        okText: '确认',
+        cancelText: '取消',
+        onOk() {
+          console.log('确认操作');
+          // 在这里执行确认后的逻辑
+        },
+        onCancel() {
+          console.log('取消操作');
+          // 在这里执行取消后的逻辑
+        },
+      });
+    },
+    deleteTask(){
+      this.$confirm({
+        title: '删除服务',
+        content: '删除服务后，服务将无法恢复，请谨慎操作？',
+        okText: '确认',
+        cancelText: '取消',
+        onOk() {
+          console.log('确认操作');
+          // 在这里执行确认后的逻辑
+        },
+        onCancel() {
+          console.log('取消操作');
+          // 在这里执行取消后的逻辑
+        },
+      });
+    },
+  },
+};
+</script>
+
+<style scoped lang="less">
+@import "~@/config/theme.less";
+.toolbar {
+  &::v-deep .el-select .el-input {
+    width: 80px;
+  }
+  &::v-deep .input-with-select .el-input-group__prepend {
+    background-color: #fff;
+  }
+}
+/deep/ .step-content .rightOffline {
+  background-color: transparent !important;
+}
+.mainContent {
+  padding: 0;
+  // background-color: #fff;
+  // border-radius: @borderRadiusBig;
+}
+.content {
+  display: flex;
+  flex: 1;
+  .left {
+    width: 200px;
+    border-right: 2px solid #e6e7ea;
+    padding-left: 12px;
+    padding-right: 12px;
+    max-height: calc(100vh - 160px);
+    overflow: auto;
+  }
+  .right {
+    flex: 1;
+  }
+}
+.new-row {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+.search-header {
+  margin-bottom: 10px;
+}
+.slot-name {
+  margin-left: 20px;
+  display: flex;
+  .name {
+    text-align: center;
+    margin-right: 10px;
+    line-height: 32px;
+    color: #09102f;
+  }
+  .ant-input,
+  .ant-select {
+    width: 350px;
+  }
+}
+.redColor {
+  color: red;
+}
+.blueColor {
+  color: blue;
+}
+/deep/ .splitter-pane.vertical.splitter-paneR {
+  min-height: 100%;
+  height: auto;
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
+}
+/deep/ .vue-splitter-container {
+  min-height: calc(100vh - 168px);
+}
+</style>

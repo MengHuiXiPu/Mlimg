@@ -1,0 +1,37 @@
+@bg-color-g: #daeaff;
+@bg-color: #bedcff;
+
+.base-block(@bgColor: @bg-color) {
+  background-color: @bgColor;
+  border-radius: 8px;
+}
+.space-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+// 右侧header
+.right-header {
+  color: #333333;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Arial Negreta', 'Arial Normal', 'Arial', sans-serif;
+  padding: 8px 0px;
+  .space-between();
+}
+
+.ant-form-item {
+  margin-bottom: 0px;
+}
+// .ant-form-vertical .ant-form-item-label{
+//   padding: 0;
+// }
+
+.row-label{
+  text-align: right;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 30px;
+}

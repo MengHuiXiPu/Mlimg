@@ -1,0 +1,205 @@
+// main
+@homeBackgroundColor: #daeaff; // 页面主背景色
+@borderRadiusBig: 16px;
+@borderRadiusSmall: 8px;
+//@homeBackgroundColor: #fff;
+
+// 字体
+@fontFamily: '微软雅黑 Bold', '微软雅黑 Regular', '微软雅黑', sans-serif;
+
+// header
+@headerPrimaryColor: #0072C6; // header头背景色
+@headerHeight: 48px; // header头高度
+
+// logo
+@logoFontSize: 22px; // logo字体大小
+
+// sider
+@siderBackgroundColor: #daeaff;
+
+// menu
+@menuBackgroundColor: #daeaff;  // 菜单背景颜色
+@menuColor: #0000ff; // 菜单文字颜色
+@menuFirstFontSize: 16px; // 一级菜单文字大小
+@menuSecondFontSize: 14px; // 二级菜单文字大小
+@menuWidth: 200px;  // 菜单宽度
+@itemActiveColor: #fff;  // 菜单选中时文字颜色
+@itemActiveBackgroundColor: #4045ff; // 菜单选中时背景颜色
+
+// content
+@contentBackgroundColor: #bedcff;
+@contentMargin: 32px;
+
+// 首页
+// 组件A的样式
+@homeAComponentWidth: 280px; // 组件宽度
+@homeAComponentHeight: 100px; // 组件高度
+@homeAComponentBgc: #ddeeff; // 组件A背景色
+@homeATextFontSize: 14px; // 组件A文字大小
+@homeATextColor: #aaa; // 组件A文字颜色
+@homeANumberFontSize: 36px; // 组件A数字大小
+@homeANumberColor: #333; // 组件A数字颜色
+@homeAImageWidth: 60px; // 图片大小
+
+// contentHeader
+@breadcrumbColor: rgba(0, 0, 255, 0.706);  // 面包屑文字颜色
+@headerColor: #333; // 头部文字颜色
+@headerBtnBgc: #1990ff; // 头部按钮背景色
+@headerBtnColor: #fff; // 头部按钮文字颜色
+@headerBtnFontSize: 14px; // 头部按钮文字大小
+
+// 所有表格的样式
+@tableHeadBgc: #d7d7d7; // 表格头部的背景色
+@tableHeadColor: #333; // 表格头部的颜色
+@tableBodyColor: #333; // 表格内容的颜色
+@tableNameColor: #0000ff; // 表格可点击文本颜色
+@tableBGC1: #fff; // 表格奇数行背景色1
+@tableBGC2: #f2f2f2; // 表格奇数行背景色2
+@tableHeadFontSize: 14px; // 表格头部的字体大小
+@tableBodyFontSize: 14px; // 表格内容的字体大小
+
+// 新建模型
+@paneBackgroundColor: #f2f2f2; // 新建模型步骤中每个小pane的背景色
+@tabBackgroundColor: #fff; // 新建模型中主背景色
+@paneFontSize: 16px; // 新建模型步骤中每个小pane的文字大小
+@paneTextColor: #333; // 新建模型步骤中每个小pane的文字颜色
+
+
+// 卡片
+@cardALBorderColor: #0000ff; // 卡片选中时的边框颜色
+@descFontSize: 16px;
+
+// 选中数据集tag
+@tagBgc: #d2e3f4; // 选中数据集tag的背景色
+@tagColor: #333; // 选中数据集tag的文字颜色
+
+// 新建模型第三步tabs样式
+@modelTabsColor: #333; // tabs页文字颜色
+@modelTabsBgc: #d7d7d7; // tabs页背景色
+@modelActiveTabsColor: #fff; // tabs页被选中时文字颜色
+@modelActiveTabsBgc: #1890ff; // tabs页被选中时背景色
+
+@nextStepColor: #fff;
+@nextStepBgc: #1990FF;
+@nextStepWidth: 116px;
+@nextStepHeight: 42px;
+
+@baseLayoutBgColor: #f6f7fa;  // 基础布局背景色
+
+
+//a {
+//  color: #00f!important;
+//}
+
+a[disabled] {
+  color: rgba(0, 0, 0, 0.25)!important;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+// 表格的外边距
+/deep/ .ant-table-wrapper {
+  //margin: 0 16px;.ant-table-wrapper {
+  //    zoom: 1;
+  //
+  //}
+  font-family: @fontFamily;
+}
+
+/deep/ .ant-table-tbody > tr > td {
+  font-family: 'Arial Normal', 'Arial', sans-serif;
+}
+
+// /deep/ .ant-table-thead > tr:first-child > th:last-child {
+//   border-top-right-radius: @borderRadiusBig;
+// }
+// /deep/ .ant-table-thead > tr:first-child > th:first-child {
+//   border-top-left-radius: @borderRadiusBig;
+// }
+
+// /deep/ .ant-table-tbody > .ant-table-row:last-child td:first-child {
+//   border-bottom-left-radius: @borderRadiusBig!important;
+// }
+
+// /deep/ .ant-table-tbody > .ant-table-row:last-child td:last-child {
+//   border-bottom-right-radius: @borderRadiusBig!important;
+// }
+
+// /deep/ .ant-table.ant-table-scroll-position-left .ant-table-fixed-left {
+//   border-top-left-radius: @borderRadiusBig!important;
+// }
+
+// /deep/ .ant-table.ant-table-scroll-position-right .ant-table-fixed-right {
+//   border-top-right-radius: @borderRadiusBig!important;
+// }
+
+// /deep/ .ant-table-wrapper .ant-table-thead > tr:first-child > th:last-child {
+//   border-top-right-radius: @borderRadiusBig;
+// }
+
+// /deep/ .ant-table-wrapper .ant-table-thead > tr:first-child > th:first-child {
+//   border-top-left-radius: @borderRadiusBig;
+// }
+
+/deep/ .ant-pagination-options-size-changer.ant-select {
+  margin-right: 0px;
+}
+
+/deep/ .ant-table-placeholder {
+  border-radius: 0 0 @borderRadiusBig @borderRadiusBig;
+}
+
+
+/deep/ .ant-pagination-item-active a {
+  color: #1890ff;
+  border-color: rgb(24, 144, 255);
+  background-color: #fff;
+  border-radius: 3px;
+}
+
+/deep/ .splitter-pane.vertical.splitter-paneR {
+  min-height: 100%;
+  height: auto;
+  border-left: 1px solid rgba(0,0,0,0.2);
+}
+
+/deep/ .vue-splitter-container {
+  min-height: calc(100vh - 168px);
+}
+
+/deep/ .ant-table-thead > tr > th {
+  background-color: @tableHeadBgc;
+  color: @tableHeadColor;
+  font-size: @tableHeadFontSize;
+  font-weight: 700;
+}
+
+/deep/ .ant-table-tbody > tr > td {
+  font-size: @tableBodyFontSize;
+  color: @tableBodyColor;
+}
+
+/deep/ .ant-table-row-level-0:nth-child(odd) {
+  background-color: @tableBGC1; /* 奇数行背景色 */
+}
+
+/deep/ .ant-table-row-level-0:nth-child(even) {
+  background-color: @tableBGC2; /* 偶数行背景色 */
+}
+.scrollbar {
+  &::-webkit-scrollbar {
+    cursor: pointer;
+    width: 6px;
+    height: 8px;
+    background-color: #fff;
+  }
+  &::-webkit-scrollbar-thumb {
+      background-color: rgba(0,0,0,.3);
+      border-radius: 6px;
+      border: solid transparent;
+      cursor: pointer;
+  }
+  &::-webkit-scrollbar-track {
+      background-color: #fff;
+  }
+}

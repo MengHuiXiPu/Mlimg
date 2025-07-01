@@ -1,0 +1,36 @@
+.block-item-container {
+  .title {
+    color: #333333;
+    font-weight: 700;
+    font-size: 15px;
+    margin: 15px 0;
+  }
+
+  &::v-deep .el-table {
+    border-radius: unset;
+
+    .el-table__header th.el-table__cell {
+      padding: 6px 0;
+      background-color: #f2f2f2 !important;
+    }
+    .el-table__cell {
+      padding: 3px 0;
+      .cell {
+        padding: 0 5px;
+      }
+    }
+  }
+
+  // &::v-deep .el-input-number--mini {
+  //   width: 100%;
+  //   max-width: 130px;
+  // }
+}
+.cell-input-width {
+  width: 100%;
+  max-width: 140px;
+}
+.vertical-center {
+  display: flex;
+  align-items: center;
+}

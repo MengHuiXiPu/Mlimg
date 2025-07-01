@@ -1,0 +1,98 @@
+/* 周期图拼接，ATSMAP 调优首页样式 */
+@active-bg-color: #daeaff;
+@active-text-color: #0000ff;
+@full-height: calc(100vh - 105px - 30px);
+
+.page-content {
+  display: flex;
+  padding-left: 15px;
+
+  // height: 100%;
+  .left-content {
+    width: 250px;
+    border-right: 1px solid #e8e8e8;
+    // height: @full-height;
+    overflow: auto;
+
+    .header-box {
+      margin-bottom: 15px;
+      padding-right: 15px;
+    }
+
+    .template-list {
+      padding: 10px 5px;
+      cursor: pointer;
+      height: calc(100vh - 240px);
+      overflow: auto;
+
+      // height: calc(100% - 10px);
+      .card-title {
+        color: #333333;
+        font-size: 14px;
+      }
+
+      .card-logo {
+        vertical-align: -10px;
+        font-size: 24px;
+      }
+
+      .item-selected {
+        border-radius: 3px;
+        color: @active-text-color;
+        background-color: @active-bg-color;
+      }
+
+      .prompt-box {
+        margin-top: 15px;
+        text-align: center;
+
+        .loading-text {
+          text-align: center;
+        }
+
+        span {
+          font-size: 13px;
+        }
+      }
+
+      li {
+        display: flex;
+        border-radius: 2px;
+        padding: 0 5px;
+        // justify-content: space-between;
+        height: 40px;
+        line-height: 40px;
+        border-bottom: 1px solid #e8e8e8;
+
+        .temp-logo {
+          width: 30px;
+        }
+
+        .temp-name {
+          flex: 1;
+          text-align: left;
+          // 字体超出显示省略号
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .moreBtn {
+          width: 15px;
+          line-height: 2.2;
+        }
+
+        &:hover {
+          color: @active-text-color;
+        }
+      }
+    }
+  }
+
+  .right-content {
+    flex: 1;
+    padding: 0 15px 15px;
+    height: @full-height;
+    overflow: auto;
+  }
+}

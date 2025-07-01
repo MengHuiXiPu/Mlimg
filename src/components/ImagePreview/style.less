@@ -1,0 +1,412 @@
+.image-preview{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:rgba(0, 0, 0, 0.8);
+  z-index: 106;
+  .user{
+    position: absolute;
+    left: 10px;
+    top: 45px;
+  }
+  .loading{
+    overflow: hidden;
+    /deep/ .ant-spin-blur::after{
+      background: #000
+    }
+    /deep/ .ant-spin-dot-item{
+      background-color: #fff;
+    }
+    /deep/ .ant-spin{
+      max-height: none;
+    }
+    /deep/ .ant-spin-text{
+      text-shadow: none;
+      color: #fff;
+    }
+  }
+  &-content{
+    width: 100%;
+    height: calc(100vh - 45px);
+    float: left;
+    position: relative;
+    transition: all 0.5s;
+    text-align: center;
+    overflow: inherit;
+    &>:not(.img-list):not(p):not(.tool-list){
+      position: absolute;
+      font-size: 75px;
+      color: #fff;
+      cursor: pointer;
+      z-index: 1;
+    }
+    & * {
+      user-select: none;
+    }
+    .prevArrow{
+      left: 20px;
+      top: 50%;
+      margin-top: -37.5px;
+    }
+    .nextArrow{
+      right: 20px;
+      top: 50%;
+      margin-top: -37.5px;
+    }
+    .closePreview{
+      top: 10px;
+      right: 10px;
+    }
+    p{
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+      z-index: 1;
+      position: relative;
+      top: -40px;
+      display: inline-block;
+      transition: all 0.5s;
+      width: 55%;
+      word-break: break-word;
+    }
+    .img-list{
+      position: relative;
+      .img-item{
+        width: 50vw;
+        float: left;
+        height: 80vh;
+        position: relative;
+        transform: scale(1);
+        top: 10px;
+        left: 20%;
+        cursor: pointer;
+        transition: 0.3s transform;
+        .selectBtn {
+          position: absolute;
+          top: 0;
+          z-index: 2;
+        }
+        img {
+          width: 100%;
+          height: 100%;
+          user-select: none;
+        }
+
+        &>svg {
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: 1;
+          padding: 0 10px;
+        }
+
+        i {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          font-size: 50px;
+          transform: translate3d(-50%, -50%, 0);
+          z-index: 2;
+          // transform: translateX(-50%)!important;
+          // transform: translateY(-50%)!important;
+        }
+      }
+      .magnifier{
+        border: 1px solid #a9a9a9;
+        background: #06060650;
+        box-shadow: 0px 0px 20px #a0a0a0 inset;
+        position: absolute;
+        transform: translate(-50%, -50%);
+      }
+    }
+    .currentImageNumber{
+      left: 50%;
+      bottom: 10px;
+      font-size: 40px!important;
+      transform: translateX(-50%);
+      transition: all 0.5s;
+    }
+  }
+  &-list{
+    width: 0;
+    float: left;
+    transition: all 0.5s;
+    &>*{
+      margin: 10px 10px 10px 10px;
+      height: calc(50vh - 50px);
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 5px;
+      padding: 10px;
+      color: #fff;
+      transition: all 0.5s;
+      position: relative;
+      left: 100%;
+      /deep/ span{
+        color: #fff;
+      }
+      &>p{
+        font-weight: bold;
+        border-bottom: 1px solid #4c4c4c;
+        padding-bottom: 10px;
+        margin-bottom: 5px;
+      }
+      .tab > span{
+        cursor: pointer;
+      }
+      ul{
+        overflow-y: auto;
+        max-height: calc(100% - 30px);
+        height: 100%;
+        li{
+          list-style: none;
+          line-height: 30px;
+          height: 30px;
+          position: relative;
+          padding-left: 15px;
+          cursor: pointer;
+          &.selected{
+            background: #1890ff;
+            border-radius: 5px;
+          }
+          &>.name{
+            margin-left: 10px;
+            width: 70%;
+            display: inline-block;
+          }
+          &>.color{
+            width: 15px;
+            height: 15px;
+            display: inline-block;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-right: 5px
+          }
+          .delete{
+            display: none;
+          }
+          &:hover{
+            .delete{
+              display: inline;
+            }
+          }
+        }
+      }
+    }
+    .label-list{
+      margin-bottom: 20px;
+      & > div {
+        height: calc(100% - 50px);
+      }
+      .sort{
+        line-height: 30px;
+        span{
+          color: rgb(90, 90, 90);
+          cursor: pointer;
+          &:first-child{
+            margin-right: 20px;
+          }
+          &.select{
+            color: #fff;
+          }
+        }
+      }
+      ul{
+        border-bottom: 1px solid #4c4c4c;
+        &.menu{
+          max-height: calc(100% - 60px);
+        }
+        li{
+          &>.name{
+            width: 77%;
+          }
+          &.code{
+            min-width: 33.33%;
+            max-width: 100%;
+            overflow: hidden;
+            float: left;
+            border-radius: 5px;
+            .name{
+              width: 90%;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            &.active{
+              background: #1890ff;
+            }
+            &.selected{
+              background: #ff3318;
+            }
+            &.isReview{
+              background: #1eb103;
+            }
+          }
+        }
+      }
+      .add-label{
+        &-input{
+          width: calc(100% - 150px);
+          float: left;
+          /deep/ input{
+            background: rgba(0,0,0,0);
+            color: #fff;
+          }
+        }
+        &-button{
+          float: left;
+          padding-left: 5px;
+          &>span{
+            display: inline-block;
+            padding: 0 10px;
+            line-height: 30px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-left: 5px;
+            text-align: center;
+            cursor: pointer;
+          }
+        }
+      }
+    }
+    .graph-list{
+      ul{
+        li{
+          &>.name.selected{
+            background: #1890ff;
+            border-radius: 5px;
+            padding-left: 5px;
+            margin-right: 5px;
+          }
+        }
+      }
+    }
+  }
+  .top-left-list{
+    font-size: 14px;
+    text-align: center;
+    margin-top: 10px;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    span{
+      color: #fff;
+      background: rgba(0,0,0,0.3);
+      margin: 0 10px;
+      display: block;
+      float: left;
+      cursor: pointer;
+      &.select{
+        background: #1890ff
+      }
+    }
+    .mode-make{
+      float: left;
+      span{
+        border-radius: 5px;
+        padding: 5px;
+      }
+    }
+    .file-make{
+      float: right;
+      .checkSelect{
+        margin-right: 35px;
+        /deep/ .ant-select-selection{
+          background:rgba(0, 0, 0, 0);
+          color: #fff;
+          .ant-select-arrow{
+            color: #fff;
+          }
+        }
+      }
+      span{
+        transition: all 0.5s;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        line-height: 35px;
+        position: relative;
+        left: 0;
+        &:not(.quit){
+          left: 100%;
+        }
+      }
+    }
+  }
+  .tool-list{
+    position: fixed;
+    bottom: 20px;
+    left: 100%;
+    text-align: center;
+    font-size: 20px;
+    transition: all 0.5s;
+    width: max-content;
+    &.rotate{
+      left: 25%;
+    }
+    span{
+      color: #fff;
+      background: rgba(0,0,0,0.3);
+      margin: 0 10px;
+      display: block;
+      width: 35px;
+      height: 35px;
+      float: left;
+      border-radius: 50%;
+      line-height: 35px;
+      cursor: pointer;
+      i{
+        vertical-align: super;
+        line-height: inherit;
+      }
+      &.select{
+        background: #1890ff
+      }
+    }
+  }
+  &.fold{
+    .image-preview-content{
+      width: 75%;
+      overflow: hidden;
+      &>p{
+        top: 0;
+      }
+      .currentImageNumber{
+        left: 30px;
+        transform: translateX(0);
+      }
+    }
+    .image-preview-list{
+      width: 25%;
+      &>*{
+        left: 0;
+      }
+    }
+    .top-left-list{
+      &>.file-make>*{
+        left: 0!important;
+      }
+    }
+    .tool-list{
+      left: 25%;
+    }
+  }
+}
+
+#magnifier-image {
+  position: fixed;
+  right: 0;
+  top: 0;
+}
+
+@keyframes hight {
+  from {
+    opacity: 1;
+  } to {
+    opacity: 0;
+  }
+}
