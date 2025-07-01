@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+      "baseUrl": ".",
+      // 使用vscode开发，webpack配置了alias，使用该配置可以ctrl+点击跳转路径
+      // 如果想要跳转vue文件，请手动添加.vue文件后缀
+      // [x] import App from '@/App'
+      // [√] import App from '@/App.vue'
+      // 更多路径请在alias配置，在这里同步
+      "paths": {
+          "@/*": ["src/*"],
+          "@crud": ["src/components/Crud/*"]
+      },
+  },
+  // "include": ["src/*"],
+  "exclude": ["node_modules"]
+}
