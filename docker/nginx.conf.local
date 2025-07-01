@@ -1,0 +1,82 @@
+user  nginx;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log notice;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  65;
+
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65000;
+    types_hash_max_size 2048000;
+    client_max_body_size 2048000M;
+    client_body_timeout 60000s;
+    client_header_timeout 60000s;
+    send_timeout 60000s;
+    proxy_connect_timeout 60000s;
+    proxy_read_timeout 90000s;
+    proxy_send_timeout 90000s;
+
+    #gzip  on;
+
+    include /etc/nginx/conf.d/*.conf;
+
+#	upstream proxy_gateway {
+#        server tcl-gateway:8800;  # 替换为你的主机名和端口
+#    }
+    
+    server {
+        listen 8008;
+#        server_name 127.0.0.1;  # 替换为你的域名或服务器的 IP 地址
+
+        root /usr/share/nginx/html;  # 替换为应用构建后的静态文件目录
+        index index.html;
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        location /data/algorithm_tmp {
+           alias /data/algorithm_tmp/;
+          }
+
+        location /data/algorithm_code {
+          alias /data/algorithm_code/;
+          add_header Content-Disposition "attachment;";
+          add_header Content-Type "application/octet-stream";
+        }
+
+        location /data/dataList_package {
+          alias  /data/dataList_package;
+        }
+
+        location /nas {
+         alias /nas/;
+       }
+
+
+        location ^~/api/ {   #这里是用正则匹配的以api 开头的路径 通过 proxy_pass 属性代理到服务器上node项目运行地址
+		   	#proxy_pass http://10.120.200.35:32488/tcl-gateway;  #通过kong网关外地端口地址访问。
+		   	#proxy_pass http://10.120.200.35:30888;  #因为我node项目和前端项目是部署在同一台服务器上的，所以地址用的是127.0.0.1，如果是不同服务器可自行配置服务器端项目地址
+		   	proxy_pass http://tcl-gateway:8800;
+		}
+    }
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= htmlWebpackPlugin.options.baseUrl %>/favicon.ico">
+    <link
+      rel="stylesheet"
+      href="<%= htmlWebpackPlugin.options.baseUrl %>/font-awesome-4.7.0/css/font-awesome.min.css"
+    />
+   
+    <link rel='stylesheet' href='/plugins/css/pluginsCss.css' />
+    <link rel='stylesheet' href='/plugins/plugins.css' />
+    <link rel='stylesheet' href='/css/luckysheet.css' />
+    <link rel='stylesheet' href='/assets/iconfont/iconfont.css' />
+    <script src="/plugins/js/plugin.js"></script>
+    <script src="/luckysheet.umd.js"></script>
+
+    <!-- <link rel="stylesheet" href="<%= htmlWebpackPlugin.options.baseUrl %>/resource/vant@2.12.css"/>
+    <script src="<%= htmlWebpackPlugin.options.baseUrl %>/resource/vant@2.12.js"></script> -->
+
+    <title><%= htmlWebpackPlugin.options.title %></title>
+    <% if (!htmlWebpackPlugin.options.isDev) { %>
+      <!-- 与运维hbl确认， env-config在新工程没用到，在老工程是空文件，所以这里去掉-->
+    <!-- <script src="/auth/env-config.js"></script> -->
+    <% } else { %>
+    <script>
+        window._env_ = {
+            COOKIE_TOKEN_KEY: "dev_access_token",
+            COOKIE_TOKENTYPE_KEY: "dev_token_type"
+        }
+    </script>
+    <% } %>
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+    <script src="<%= htmlWebpackPlugin.options.baseUrl %>/vendor/vendor.dll.js"></script>
+    <!-- built files will be auto injected -->
+  </body>
+</html>

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment  # 创建控制器，通过控制器创建Pod
+metadata:
+  labels:
+    app: tcl-front # 该控制器的label
+  name: tcl-front
+  namespace: tcl
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tcl-front # 选择哪个Pod
+  template:
+    metadata:
+      labels:
+        app: tcl-front # 为这个Pod打上标签，方便控制器管理
+    spec:
+      containers:
+        - image: 10.120.200.35:8089/ts/front:1.6.0.test # 远程镜像名
+          imagePullPolicy: IfNotPresent
+          name: tcl-front
+          volumeMounts:
+            - mountPath: /data
+              name: data
+            - mountPath: /nas
+              name: nas
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"  # 修改为2GB内存
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: gluster-data
+        - name: nas
+          persistentVolumeClaim:
+            claimName: gluster-nas-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: tcl
+  name: tcl-front
+  labels:
+    name: tcl-front
+spec:
+  type: NodePort      #这里代表是NodePort类型的
+  ports:
+    - port: 8008          #这里的端口和clusterIP对应,供内部访问。
+      targetPort: 8008  #端口一定要和container暴露出来的端口对应
+      protocol: TCP
+      nodePort: 30008   # 所有的节点都会开放此端口，此端口供外部调用。
+  selector:
+    app: tcl-front
+
